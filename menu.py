@@ -14,7 +14,7 @@ class Menu(object):
     def _user_has_account(self):
         blog = Database.find_one("blogs", {"author": self.user})
         if blog is not None:
-            self.user_blog = blog
+            self.user_blog = Blog.from_mongo(blog['id'])
             return True
         else:
             return False
@@ -31,8 +31,22 @@ class Menu(object):
     def run_menu(self):
         read_or_write = input("Вы хотите читать (R) блог или что-нибудь (W) написать?")
         if read_or_write == 'R':
-            pass
+            self._list_blogs()
+            self._view_blog()
         elif read_or_write == 'W':
-            pass
+            self._prompt_write_post()
         else:
             print("Спасибо, что зашли")
+
+    def _list_blogs(self):
+        blogs = Database.find(collection='blogs',
+                              query={})
+        for blog in blogs:
+            print("ID: {}, Название: {}, Автор: {}".format(blog['id'], blog['title'], blog['author']))
+
+    def _view_blog(self):
+        blog_to_see = input("Давайте ID блога, который хотите посмотреть: ")
+        blog = Blog.from_mongo(blog_to_see)
+        posts = blog.get_posts()
+        for post in posts:
+            print("Дата: {}, название: {}\n\n{}".format(post['created_date'], post['title'], post['content']))
